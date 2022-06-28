@@ -2,17 +2,17 @@ import { MikroORM, RequiredEntityData } from '@mikro-orm/core'
 import { __prod__ } from './constants'
 import { Post } from './entities/Post'
 import microConfig from './mikro-orm.config'
+import express from 'express'
 
 const main = async () => {
 	const orm = await MikroORM.init(microConfig)
+	await orm.getMigrator().up()
 
-	//meta.object.member.ts
-	const post = orm.em.create(Post, {
-		title: 'my first post',
-	} as RequiredEntityData<Post>)
-	await orm.em.persistAndFlush(post)
-	console.log('-----------sql 2------------')
-	await orm.em.nativeInsert(Post, { title: 'my first post 2' })
+	const app = express()
+	app.get('/', (req, res) => {})
+	app.listen(4000, () => {
+		console.log('server started on localhost:4000')
+	})
 }
 
 main().catch((err) => {

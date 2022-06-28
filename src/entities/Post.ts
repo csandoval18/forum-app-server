@@ -1,16 +1,17 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core'
+import { networkInterfaces } from 'os'
 
 @Entity()
 export class Post {
 	@PrimaryKey()
-	id: number
+	id!: number
 
-	@Property()
+	@Property({ type: 'date' })
 	createdAt = new Date()
 
-	@Property({ onUpdate: () => new Date() })
+	@Property({ type: 'date', onUpdate: () => new Date() })
 	updatedAt = new Date()
 
-	@Property()
-	title: string
+	@Property({ type: 'date' })
+	title!: string
 }
