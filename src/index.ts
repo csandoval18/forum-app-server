@@ -13,12 +13,6 @@ const main = async () => {
 	const orm = await MikroORM.init(microConfig)
 	await orm.getMigrator().up()
 
-	//adds record to postgres post table in forum DB
-	// const post = orm.em.fork({}).create(Post, {
-	// 	title: 'my first post',
-	// } as RequiredEntityData<Post>)
-	// await orm.em.persistAndFlush(post)
-
 	const app = express()
 
 	const apolloServer = new ApolloServer({
