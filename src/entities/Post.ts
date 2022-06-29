@@ -1,5 +1,4 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core'
-import { networkInterfaces } from 'os'
 
 @Entity()
 export class Post {
