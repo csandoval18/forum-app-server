@@ -14,5 +14,6 @@ export default {
 	password: 'root',
 	type: 'postgresql',
 	debug: !__prod__,
+	allowGlobalContext: true,
 } as Parameters<typeof MikroORM.init>[0]
 // ^ sets type to first parameter accepted type for MikroORM.init() function in index.ts
