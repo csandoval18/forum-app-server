@@ -25,7 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResolver = void 0;
-const User_1 = require("../entities/User");
+const Users_1 = require("../entities/Users");
 const type_graphql_1 = require("type-graphql");
 const argon2_1 = __importDefault(require("argon2"));
 let UsernamePasswordInput = class UsernamePasswordInput {
@@ -61,8 +61,8 @@ __decorate([
     __metadata("design:type", Array)
 ], UserResponse.prototype, "errors", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(() => User_1.User, { nullable: true }),
-    __metadata("design:type", User_1.User)
+    (0, type_graphql_1.Field)(() => Users_1.Users, { nullable: true }),
+    __metadata("design:type", Users_1.Users)
 ], UserResponse.prototype, "user", void 0);
 UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
@@ -91,11 +91,13 @@ let UserResolver = class UserResolver {
                 };
             }
             const hashsedPassword = yield argon2_1.default.hash(options.password);
-            const user = em.fork({}).create(User_1.User, {
+            const user = em.fork({}).create(Users_1.Users, {
                 username: options.username,
                 password: hashsedPassword,
             });
-            const usernameTaken = yield em.findOne(User_1.User, { username: options.username });
+            const usernameTaken = yield em.findOne(Users_1.Users, {
+                username: options.username,
+            });
             if (!usernameTaken) {
                 yield em.persistAndFlush(user);
                 return { user };
@@ -113,9 +115,9 @@ let UserResolver = class UserResolver {
             }
         });
     }
-    login(options, { em }) {
+    login(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield em.findOne(User_1.User, { username: options.username });
+            const user = yield em.findOne(Users_1.Users, { username: options.username });
             if (!user) {
                 return {
                     errors: [
@@ -137,6 +139,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
+            req.session.userId = user.id;
             return {
                 user,
             };
@@ -153,7 +156,7 @@ __decorate([
 ], UserResolver.prototype, "register", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
-    __param(0, (0, type_graphql_1.Arg)('options', () => UsernamePasswordInput)),
+    __param(0, (0, type_graphql_1.Arg)('options')),
     __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [UsernamePasswordInput, Object]),
@@ -163,4 +166,4 @@ UserResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], UserResolver);
 exports.UserResolver = UserResolver;
-//# sourceMappingURL=user.js.map
+//# sourceMappingURL=users.js.map

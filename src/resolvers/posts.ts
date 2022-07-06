@@ -1,43 +1,45 @@
 import { Resolver, Query, Ctx, Arg, Int, Mutation } from 'type-graphql'
-import { MyContext } from '../types'
-import { Post } from '../entities/Post'
+import { MyContext } from '../types/types'
+import { Posts } from '../entities/Posts'
 import { RequiredEntityData } from '@mikro-orm/core'
 
 // Post queries to DB
 @Resolver()
 export class PostResolver {
-	@Query(() => [Post])
-	posts(@Ctx() { em }: MyContext): Promise<Post[]> {
-		return em.find(Post, {})
+	@Query(() => [Posts])
+	posts(@Ctx() { em }: MyContext): Promise<Posts[]> {
+		return em.find(Posts, {})
 	}
 
-	@Query(() => Post, { nullable: true })
+	@Query(() => Posts, { nullable: true })
 	post(
 		@Arg('id', () => Int) id: number,
 		@Ctx() { em }: MyContext,
-	): Promise<Post | null> {
-		return em.findOne(Post, { id })
+	): Promise<Posts | null> {
+		return em.findOne(Posts, { id })
 	}
 
 	//Create a post
-	@Mutation(() => Post, { nullable: true })
+	@Mutation(() => Posts, { nullable: true })
 	async createPost(
 		@Arg('title') title: string,
 		@Ctx() { em }: MyContext,
-	): Promise<Post | null> {
+	): Promise<Posts | null> {
 		//adds record to postgres post table in forum DB
-		const post = em.fork({}).create(Post, { title } as RequiredEntityData<Post>)
+		const post = em
+			.fork({})
+			.create(Posts, { title } as RequiredEntityData<Posts>)
 		await em.persistAndFlush(post)
 		return post
 	}
 
-	@Mutation(() => Post, { nullable: true })
+	@Mutation(() => Posts, { nullable: true })
 	async updatePost(
 		@Arg('id') id: number,
 		@Arg('title', () => String, { nullable: true }) title: string,
 		@Ctx() { em }: MyContext,
-	): Promise<Post | null> {
-		const post = await em.findOne(Post, { id })
+	): Promise<Posts | null> {
+		const post = await em.findOne(Posts, { id })
 		if (!post) {
 			return null
 		}
@@ -53,7 +55,7 @@ export class PostResolver {
 		@Arg('id') id: number,
 		@Ctx() { em }: MyContext,
 	): Promise<boolean> {
-		await em.nativeDelete(Post, { id })
+		await em.nativeDelete(Posts, { id })
 		return true
 	}
 }

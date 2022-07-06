@@ -1,5 +1,5 @@
-import { User } from '../entities/User'
-import { MyContext } from '../types'
+import { Users } from '../entities/Users'
+import { MyContext } from '../types/types'
 import {
 	Resolver,
 	Arg,
@@ -39,8 +39,8 @@ class UserResponse {
 	errors?: FieldError[]
 
 	//user returns if query worked properly
-	@Field(() => User, { nullable: true })
-	user?: User
+	@Field(() => Users, { nullable: true })
+	user?: Users
 }
 
 @Resolver()
@@ -74,13 +74,15 @@ export class UserResolver {
 			}
 		}
 		const hashsedPassword = await argon2.hash(options.password)
-		const user = em.fork({}).create(User, {
+		const user = em.fork({}).create(Users, {
 			username: options.username,
 			password: hashsedPassword,
-		} as RequiredEntityData<User>)
+		} as RequiredEntityData<Users>)
 
 		//querie to check if username already is already taken
-		const usernameTaken = await em.findOne(User, { username: options.username })
+		const usernameTaken = await em.findOne(Users, {
+			username: options.username,
+		})
 		if (!usernameTaken) {
 			await em.persistAndFlush(user)
 			return { user }
@@ -100,11 +102,11 @@ export class UserResolver {
 	//login handling
 	@Mutation(() => UserResponse)
 	async login(
-		@Arg('options', () => UsernamePasswordInput) options: UsernamePasswordInput,
-		@Ctx() { em }: MyContext,
+		@Arg('options') options: UsernamePasswordInput,
+		@Ctx() { em, req }: MyContext,
 	): Promise<UserResponse> {
 		//querie for row containing data of user
-		const user = await em.findOne(User, { username: options.username })
+		const user = await em.findOne(Users, { username: options.username })
 		if (!user) {
 			return {
 				errors: [
@@ -126,6 +128,8 @@ export class UserResolver {
 				],
 			}
 		}
+		req.session.userId = user.id
+
 		return {
 			user,
 		}

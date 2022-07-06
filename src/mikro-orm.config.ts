@@ -1,15 +1,15 @@
-import { Post } from './entities/Post'
+import { Posts } from './entities/Posts'
 import { __prod__ } from './constants'
 import { MikroORM } from '@mikro-orm/core'
 import path from 'path'
-import { User } from './entities/User'
+import { Users } from './entities/Users'
 
 export default {
 	migrations: {
 		path: path.join(__dirname, './migrations'),
 		pattern: /^[\w-]+\d+\.[tj]s$/,
 	},
-	entities: [Post, User],
+	entities: [Posts, Users],
 	dbName: 'forum',
 	user: 'Christian',
 	password: 'root',
