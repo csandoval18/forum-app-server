@@ -54,7 +54,7 @@
           "mappedType": "text"
         }
       },
-      "name": "user",
+      "name": "users",
       "schema": "public",
       "indexes": [
         {
@@ -62,12 +62,12 @@
             "username"
           ],
           "composite": false,
-          "keyName": "user_username_unique",
+          "keyName": "users_username_unique",
           "primary": false,
           "unique": true
         },
         {
-          "keyName": "user_pkey",
+          "keyName": "users_pkey",
           "columnNames": [
             "id"
           ],
@@ -120,11 +120,11 @@
           "mappedType": "text"
         }
       },
-      "name": "post",
+      "name": "posts",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "post_pkey",
+          "keyName": "posts_pkey",
           "columnNames": [
             "id"
           ],

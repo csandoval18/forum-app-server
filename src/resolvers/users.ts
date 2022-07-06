@@ -1,5 +1,5 @@
-import { User } from '../entities/User'
-import { MyContext } from '../types'
+import { Users } from '../entities/Users'
+import { MyContext } from '../types/types'
 import {
 	Resolver,
 	Arg,
@@ -8,6 +8,7 @@ import {
 	Field,
 	Ctx,
 	ObjectType,
+	Query,
 } from 'type-graphql'
 import { RequiredEntityData } from '@mikro-orm/core'
 //argon2 is for hashing password and making it secure in case the DB is compromised
@@ -39,18 +40,30 @@ class UserResponse {
 	errors?: FieldError[]
 
 	//user returns if query worked properly
-	@Field(() => User, { nullable: true })
-	user?: User
+	@Field(() => Users, { nullable: true })
+	user?: Users
 }
 
 @Resolver()
 export class UserResolver {
+	@Query(() => Users, { nullable: true })
+	async me(@Ctx() { req, em }: MyContext) {
+		//user is not logged in since no cookie is set null is returned
+		if (!req.session.userId) {
+			return null
+		}
+
+		//else if the session cookie is set return the user info
+		const user = em.findOne(Users, { id: req.session.userId })
+		return user
+	}
+
 	//register handling
 	@Mutation(() => UserResponse)
 	async register(
 		//options is an object with containing the username and password as parameter fields
 		@Arg('options') options: UsernamePasswordInput,
-		@Ctx() { em }: MyContext,
+		@Ctx() { em, req }: MyContext,
 	): Promise<UserResponse> {
 		if (options.username.length <= 2) {
 			return {
@@ -74,18 +87,25 @@ export class UserResolver {
 			}
 		}
 		const hashsedPassword = await argon2.hash(options.password)
-		const user = em.fork({}).create(User, {
+		const user = em.fork({}).create(Users, {
 			username: options.username,
 			password: hashsedPassword,
-		} as RequiredEntityData<User>)
+		} as RequiredEntityData<Users>)
 
 		//querie to check if username already is already taken
-		const usernameTaken = await em.findOne(User, { username: options.username })
+		const usernameTaken = await em.findOne(Users, {
+			username: options.username,
+		})
+		//if username does not exist in DB create the user record
 		if (!usernameTaken) {
 			await em.persistAndFlush(user)
+			//store user id session
+			//this will set a cokie on the user
+			//and keep them logged in after they register
+			req.session.userId = user.id
 			return { user }
 		} else {
-			console.log('Hello')
+			//if username is taken return an error array object
 			return {
 				errors: [
 					{
@@ -100,11 +120,11 @@ export class UserResolver {
 	//login handling
 	@Mutation(() => UserResponse)
 	async login(
-		@Arg('options', () => UsernamePasswordInput) options: UsernamePasswordInput,
-		@Ctx() { em }: MyContext,
+		@Arg('options') options: UsernamePasswordInput,
+		@Ctx() { em, req }: MyContext,
 	): Promise<UserResponse> {
 		//querie for row containing data of user
-		const user = await em.findOne(User, { username: options.username })
+		const user = await em.findOne(Users, { username: options.username })
 		if (!user) {
 			return {
 				errors: [
@@ -126,6 +146,10 @@ export class UserResolver {
 				],
 			}
 		}
+		//sets cookie session to maintain user logged in after login
+		//also stores user.id into redis
+		req.session.userId = user.id
+
 		return {
 			user,
 		}
