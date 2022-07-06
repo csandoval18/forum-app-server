@@ -68,7 +68,16 @@ UserResponse = __decorate([
     (0, type_graphql_1.ObjectType)()
 ], UserResponse);
 let UserResolver = class UserResolver {
-    register(options, { em }) {
+    me({ req, em }) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (!req.session.userId) {
+                return null;
+            }
+            const user = em.findOne(Users_1.Users, { id: req.session.userId });
+            return user;
+        });
+    }
+    register(options, { em, req }) {
         return __awaiter(this, void 0, void 0, function* () {
             if (options.username.length <= 2) {
                 return {
@@ -100,10 +109,10 @@ let UserResolver = class UserResolver {
             });
             if (!usernameTaken) {
                 yield em.persistAndFlush(user);
+                req.session.userId = user.id;
                 return { user };
             }
-            else {
-                console.log('Hello');
+            else if (usernameTaken) {
                 return {
                     errors: [
                         {
@@ -139,6 +148,7 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
+            console.log('cookie set');
             req.session.userId = user.id;
             return {
                 user,
@@ -146,6 +156,13 @@ let UserResolver = class UserResolver {
         });
     }
 };
+__decorate([
+    (0, type_graphql_1.Query)(() => Users_1.Users, { nullable: true }),
+    __param(0, (0, type_graphql_1.Ctx)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserResolver.prototype, "me", null);
 __decorate([
     (0, type_graphql_1.Mutation)(() => UserResponse),
     __param(0, (0, type_graphql_1.Arg)('options')),

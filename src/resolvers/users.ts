@@ -8,6 +8,7 @@ import {
 	Field,
 	Ctx,
 	ObjectType,
+	Query,
 } from 'type-graphql'
 import { RequiredEntityData } from '@mikro-orm/core'
 //argon2 is for hashing password and making it secure in case the DB is compromised
@@ -45,12 +46,24 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+	@Query(() => Users, { nullable: true })
+	async me(@Ctx() { req, em }: MyContext) {
+		//user is not logged in since no cookie is set null is returned
+		if (!req.session.userId) {
+			return null
+		}
+
+		//else if the session cookie is set return the user info
+		const user = em.findOne(Users, { id: req.session.userId })
+		return user
+	}
+
 	//register handling
 	@Mutation(() => UserResponse)
 	async register(
 		//options is an object with containing the username and password as parameter fields
 		@Arg('options') options: UsernamePasswordInput,
-		@Ctx() { em }: MyContext,
+		@Ctx() { em, req }: MyContext,
 	): Promise<UserResponse> {
 		if (options.username.length <= 2) {
 			return {
@@ -83,11 +96,15 @@ export class UserResolver {
 		const usernameTaken = await em.findOne(Users, {
 			username: options.username,
 		})
+		//if username does not exist in DB create the user record
 		if (!usernameTaken) {
 			await em.persistAndFlush(user)
+			//store user id session
+			//this will set a cokie on the user
+			//and keep them logged in after they register
+			req.session.userId = user.id
 			return { user }
-		} else {
-			console.log('Hello')
+		} else if (usernameTaken) {
 			return {
 				errors: [
 					{
@@ -128,6 +145,7 @@ export class UserResolver {
 				],
 			}
 		}
+		console.log('cookie set')
 		req.session.userId = user.id
 
 		return {
