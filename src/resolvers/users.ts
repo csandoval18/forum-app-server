@@ -104,7 +104,8 @@ export class UserResolver {
 			//and keep them logged in after they register
 			req.session.userId = user.id
 			return { user }
-		} else if (usernameTaken) {
+		} else {
+			//if username is taken return an error array object
 			return {
 				errors: [
 					{
@@ -145,7 +146,8 @@ export class UserResolver {
 				],
 			}
 		}
-		console.log('cookie set')
+		//sets cookie session to maintain user logged in after login
+		//also stores user.id into redis
 		req.session.userId = user.id
 
 		return {

@@ -112,7 +112,7 @@ let UserResolver = class UserResolver {
                 req.session.userId = user.id;
                 return { user };
             }
-            else if (usernameTaken) {
+            else {
                 return {
                     errors: [
                         {
@@ -148,7 +148,6 @@ let UserResolver = class UserResolver {
                     ],
                 };
             }
-            console.log('cookie set');
             req.session.userId = user.id;
             return {
                 user,
